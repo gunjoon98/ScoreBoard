@@ -85,7 +85,7 @@ public class JdbcRepository {
                 dashBoardProblemEntity.getDashBoardId());
 
         for(String type : dashBoardProblemEntity.getTypes()) {
-            jdbcTemplate.update("insert into dashboardproblemtype(dashboardId,problemNumber,problemType) values (?, ?, ?)",
+            jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemNumber, problemType) values (?, ?, ?)",
                     dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getNumber(), type);
         }
     }

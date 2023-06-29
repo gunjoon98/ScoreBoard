@@ -128,33 +128,16 @@ class JdbcRepositoryTest {
     @Transactional
     void deleteDashBoardEntityTest() {
         //given
-        UserEntity user = new UserEntity("test", false);
-        jdbcRepository.saveUserEntity("test");
-
-        DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        int dashboardId = jdbcRepository.saveDashBoardEntity(dashBoardEntityForm);
-
-        List<String> types = new ArrayList<>();
-        types.add("구현");
-        types.add("수학");
-        DashBoardProblemEntity dashBoardProblemEntity = new DashBoardProblemEntity(dashboardId, 1000, "A+B", "브론즈 V", "https://www.acmicpc.net/problem/1000", types);
-        jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity);
-
-        DashBoardSolveEntity dashBoardSolveEntity = new DashBoardSolveEntity(user.getId(), dashboardId, dashBoardProblemEntity.getNumber(), true, 3);
-        jdbcRepository.saveDashBoardSolveEntity(dashBoardSolveEntity);
-
-        DashBoardAttendEntity dashBoardAttendEntity = new DashBoardAttendEntity(user.getId(), dashboardId);
-        jdbcRepository.saveDashBoardAttendEntity(dashBoardAttendEntity);
 
         //when
-        jdbcRepository.deleteDashBoardEntity(dashboardId);
+        jdbcRepository.deleteDashBoardEntity(testData.getDashBoardEntity().getId());
 
         //then
-        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardEntityById(dashboardId))
+        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardEntityById(testData.getDashBoardEntity().getId()))
                 .isInstanceOf(EmptyResultDataAccessException.class);
-        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardProblemEntityById(dashboardId, dashBoardProblemEntity.getDashBoardId()))
+        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardProblemEntityById(testData.getDashBoardEntity().getId(), testData.getDashBoardProblemEntity1().getNumber()))
                 .isInstanceOf(EmptyResultDataAccessException.class);
-        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardSolveEntityById(user.getId(), dashboardId, dashBoardProblemEntity.getNumber()))
+        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardSolveEntityById(testData.getUserEntity().getId(), testData.getDashBoardEntity().getId(), testData.getDashBoardProblemEntity1().getNumber()))
                 .isInstanceOf(EmptyResultDataAccessException.class);
     }
 
@@ -162,19 +145,16 @@ class JdbcRepositoryTest {
     @Transactional
     void findDashBoardEntityByRecentTest() {
         //given
-        DashBoardEntityForm dashBoardEntityForm1 = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        jdbcRepository.saveDashBoardEntity(dashBoardEntityForm1);
-
-        DashBoardEntityForm dashBoardEntityForm2 = new DashBoardEntityForm(LocalDateTime.now().minusDays(10), LocalDateTime.now().minusDays(1));
-        jdbcRepository.saveDashBoardEntity(dashBoardEntityForm2);
+        DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+        jdbcRepository.saveDashBoardEntity(dashBoardEntityForm);
 
         //when
         List<DashBoardEntity> result = jdbcRepository.findDashBoardEntityListByDesc(5);
 
         //then
         List<DashBoardEntity> dashBoardEntityList = new ArrayList<>();
-        dashBoardEntityList.add(new DashBoardEntity(result.get(0).getId(), dashBoardEntityForm2.getStartDate(), dashBoardEntityForm2.getEndDate()));
-        dashBoardEntityList.add(new DashBoardEntity(result.get(1).getId(), dashBoardEntityForm1.getStartDate(), dashBoardEntityForm1.getEndDate()));
+        dashBoardEntityList.add(new DashBoardEntity(result.get(0).getId(), dashBoardEntityForm.getStartDate(), dashBoardEntityForm.getEndDate()));
+        dashBoardEntityList.add(new DashBoardEntity(result.get(1).getId(), testData.getDashBoardEntity().getStartDate(), testData.getDashBoardEntity().getEndDate()));
         Assertions.assertThat(result).isEqualTo(dashBoardEntityList);
     }
 
@@ -182,27 +162,23 @@ class JdbcRepositoryTest {
     @Test
     @Transactional
     void saveDashBoardProblemEntityTest() {
-        //given
-        DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        int dashboardId = jdbcRepository.saveDashBoardEntity(dashBoardEntityForm);
-
         List<String> types = new ArrayList<>();
         types.add("구현");
         types.add("수학");
 
         DashBoardProblemEntity dashBoardProblemEntity = new DashBoardProblemEntity(
-                dashboardId,
-                1000,
-                "A+B",
+                testData.getDashBoardEntity().getId(),
+                1050,
+                "TEST",
                 "브론즈 V",
-                "https://www.acmicpc.net/problem/1000",
+                "https://TEST",
                 types);
 
         //when
         jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity);
 
         //then
-        DashBoardProblemEntity result = jdbcRepository.findDashBoardProblemEntityById(dashboardId, dashBoardProblemEntity.getNumber());
+        DashBoardProblemEntity result = jdbcRepository.findDashBoardProblemEntityById(testData.getDashBoardEntity().getId(), dashBoardProblemEntity.getNumber());
         Assertions.assertThat(result).isEqualTo(dashBoardProblemEntity);
     }
 
@@ -211,21 +187,12 @@ class JdbcRepositoryTest {
     @Transactional
     void deleteDashBoardProblemEntityTest() {
         //given
-        DashBoardEntityForm dashBoardForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        int dashboardId = jdbcRepository.saveDashBoardEntity(dashBoardForm);
-
-        List<String> types = new ArrayList<>();
-        types.add("구현");
-        types.add("수학");
-        DashBoardProblemEntity dashBoardProblemEntity = new DashBoardProblemEntity(dashboardId, 1000, "A+B", "브론즈 V", "https://www.acmicpc.net/problem/1000", types);
-
-        jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity);
 
         //when
-        jdbcRepository.deleteDashBoardProblemEntity(dashboardId, dashBoardProblemEntity.getNumber());
+        jdbcRepository.deleteDashBoardProblemEntity(testData.getDashBoardProblemEntity1().getDashBoardId(), testData.getDashBoardProblemEntity1().getNumber());
 
         //then
-        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardProblemEntityById(dashboardId, dashBoardProblemEntity.getNumber()))
+        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardProblemEntityById(testData.getDashBoardProblemEntity1().getDashBoardId(), testData.getDashBoardProblemEntity1().getNumber()))
                 .isInstanceOf(EmptyResultDataAccessException.class);
     }
 
@@ -233,27 +200,12 @@ class JdbcRepositoryTest {
     @Transactional
     void findDashBoardProblemEntityListTest() {
         //given
-        DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        int dashboardId = jdbcRepository.saveDashBoardEntity(dashBoardEntityForm);
-
-        List<String> types = new ArrayList<>();
-        types.add("구현");
-        types.add("수학");
-        DashBoardProblemEntity dashBoardProblemEntity = new DashBoardProblemEntity(
-                dashboardId,
-                1000,
-                "A+B",
-                "브론즈 V",
-                "https://www.acmicpc.net/problem/1000",
-                types);
-
         List<DashBoardProblemEntity> list = new ArrayList<>();
-        list.add(dashBoardProblemEntity);
-
-        jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity);
+        list.add(testData.dashBoardProblemEntity1);
+        list.add(testData.dashBoardProblemEntity2);
 
         //when
-        List<DashBoardProblemEntity> result = jdbcRepository.findDashBoardProblemEntityList(dashboardId);
+        List<DashBoardProblemEntity> result = jdbcRepository.findDashBoardProblemEntityList(testData.getDashBoardEntity().getId());
 
         //then
         Assertions.assertThat(result).isEqualTo(list);
@@ -262,9 +214,43 @@ class JdbcRepositoryTest {
     @Test
     @Transactional
     void saveDashBoardSolveEntityTest() {
+        //given
+        List<String> types = new ArrayList<>();
+        types.add("구현");
+        types.add("수학");
+        DashBoardProblemEntity dashBoardProblemEntity = new DashBoardProblemEntity(
+                testData.getDashBoardEntity().getId(),
+                1050,
+                "TEST",
+                "브론즈 V",
+                "https://TEST",
+                types);
+        jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity);
 
+        DashBoardSolveEntity dashBoardSolveEntity = new DashBoardSolveEntity(testData.userEntity.getId(), testData.getDashBoardEntity().getId(), dashBoardProblemEntity.getNumber(), true, 3);
+
+        //when
+        jdbcRepository.saveDashBoardSolveEntity(dashBoardSolveEntity);
+
+        //then
+        Assertions.assertThat(jdbcRepository.findDashBoardSolveEntityById(testData.userEntity.getId(), testData.getDashBoardEntity().getId(), dashBoardProblemEntity.getNumber())).isEqualTo(dashBoardSolveEntity);
+    }
+
+    @Test
+    @Transactional
+    void deleteDashBoardSolveEntityTest() {
+        //given
+
+        //when
+        jdbcRepository.deleteDashBoardSolveEntity(testData.userEntity.getId(), testData.getDashBoardEntity().getId(), testData.getDashBoardProblemEntity1().getNumber());
+
+        //then
+        Assertions.assertThatThrownBy(() -> jdbcRepository.findDashBoardSolveEntityById(testData.userEntity.getId(), testData.getDashBoardEntity().getId(), testData.getDashBoardProblemEntity1().getNumber()))
+                .isInstanceOf(EmptyResultDataAccessException.class);
     }
 }
+
+
 
 
 

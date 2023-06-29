@@ -76,6 +76,14 @@ public class JdbcRepository {
                 rs.getTimestamp("endDate").toLocalDateTime()), printCount);
     }
 
+    public List<DashBoardEntity> findDashBoardEntityListByNext(int lastDashBoardEntityId, int printCount) {
+        return jdbcTemplate.query("select * from dashboard where id < ? order by id desc limit ?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
+                rs.getInt("id"),
+                rs.getTimestamp("startDate").toLocalDateTime(),
+                rs.getTimestamp("endDate").toLocalDateTime()), lastDashBoardEntityId, printCount);
+
+    }
+
     public void saveDashBoardProblemEntity(DashBoardProblemEntity dashBoardProblemEntity) {
         jdbcTemplate.update("insert into dashboardproblem(number, name, level, link, dashBoardId) values (?,?,?,?,?)",
                 dashBoardProblemEntity.getNumber(),

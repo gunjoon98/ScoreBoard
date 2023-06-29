@@ -154,10 +154,25 @@ class JdbcRepositoryTest {
         //then
         List<DashBoardEntity> dashBoardEntityList = new ArrayList<>();
         dashBoardEntityList.add(new DashBoardEntity(result.get(0).getId(), dashBoardEntityForm.getStartDate(), dashBoardEntityForm.getEndDate()));
-        dashBoardEntityList.add(new DashBoardEntity(result.get(1).getId(), testData.getDashBoardEntity().getStartDate(), testData.getDashBoardEntity().getEndDate()));
+        dashBoardEntityList.add(testData.dashBoardEntity);
         Assertions.assertThat(result).isEqualTo(dashBoardEntityList);
     }
 
+    @Test
+    @Transactional
+    void findDashBoardEntityByNextTest() {
+        //given
+        DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+        int dashBoardId = jdbcRepository.saveDashBoardEntity(dashBoardEntityForm);
+
+        //when
+        List<DashBoardEntity> result = jdbcRepository.findDashBoardEntityListByNext(dashBoardId, 5);
+
+        //then
+        List<DashBoardEntity> dashBoardEntityList = new ArrayList<>();
+        dashBoardEntityList.add(testData.dashBoardEntity);
+        Assertions.assertThat(result).isEqualTo(dashBoardEntityList);
+    }
 
     @Test
     @Transactional

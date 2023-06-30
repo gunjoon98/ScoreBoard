@@ -222,6 +222,14 @@ public class JdbcRepository {
                 rs.getInt("problemCount")), printCount);
     }
 
+    public List<TestEntity> findTestEntityListByNext(int lastTestEntityId, int printCount) {
+        return jdbcTemplate.query("select * from test where id < ? order by id desc limit ?", (ResultSet rs, int rowNum) -> new TestEntity(
+                rs.getInt("id"),
+                rs.getTimestamp("startDate").toLocalDateTime(),
+                rs.getTimestamp("endDate").toLocalDateTime(),
+                rs.getInt("problemCount")), lastTestEntityId, printCount);
+    }
+
     public void saveTestProblemEntity(TestProblemEntity testProblemEntity) {
         jdbcTemplate.update("insert into testProblem(testId, number, name, level, link) values(?, ?, ?, ?, ?)",
                 testProblemEntity.getTestId(),
@@ -292,13 +300,13 @@ public class JdbcRepository {
                 rs.getInt("tryCount")), userId, testId, problemNumber);
     }
 
-    public List<TestSolveEntity> findTestSolveEntityList(String userId, int testId, int problemNumber) {
-        return jdbcTemplate.query("select * from testsolve where userId=? and testId=? and problemNumber=?", (ResultSet rs, int rowNum) -> new TestSolveEntity(
+    public List<TestSolveEntity> findTestSolveEntityList(int testId) {
+        return jdbcTemplate.query("select * from testsolve where testId=?", (ResultSet rs, int rowNum) -> new TestSolveEntity(
                 rs.getString("userId"),
                 rs.getInt("testId"),
                 rs.getInt("problemNumber"),
                 rs.getBoolean("isSolve"),
-                rs.getInt("tryCount")), userId, testId, problemNumber);
+                rs.getInt("tryCount")), testId);
     }
 
     public void saveTestAttendEntity(TestAttendEntity testAttend) {

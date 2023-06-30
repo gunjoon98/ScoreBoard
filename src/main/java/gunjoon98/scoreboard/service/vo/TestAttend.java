@@ -8,6 +8,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EqualsAndHashCode
 public class TestAttend {
-    private final User user;
+    private final String userId;
     private final boolean isJoin;
 }

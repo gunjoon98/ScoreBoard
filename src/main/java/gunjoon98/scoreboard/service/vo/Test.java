@@ -10,10 +10,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @EqualsAndHashCode
 public class Test {
-    private int id;
-    private List<TestProblem> problemList;
-    private List<TestSolve> solveList;
-    private List<TestAttend> attendList;
+    private final int id;
+    private final List<TestProblem> problemList;
+    private final List<TestSolve> solveList;
+    private final List<TestAttend> attendList;
 }
 
 

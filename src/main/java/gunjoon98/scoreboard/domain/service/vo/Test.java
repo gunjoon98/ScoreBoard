@@ -1,4 +1,4 @@
-package gunjoon98.scoreboard.service.vo;
+package gunjoon98.scoreboard.domain.service.vo;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

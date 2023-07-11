@@ -1,9 +1,10 @@
-package gunjoon98.scoreboard.service;
+package gunjoon98.scoreboard.domain.service;
 
 import gunjoon98.scoreboard.domain.repository.JdbcRepository;
 import gunjoon98.scoreboard.domain.repository.entity.*;
-import gunjoon98.scoreboard.service.vo.*;
+import gunjoon98.scoreboard.domain.service.vo.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DashBoardService {
     private final JdbcRepository jdbcRepository;
-    private int printCount;
+    static private final int printCount = 5;
 
     private List<DashBoard> getDashBoardList(List<DashBoardEntity> dashBoardEntityList) {
         List<DashBoard> result = new ArrayList<>();
@@ -40,7 +41,7 @@ public class DashBoardService {
                         dashBoardSolveEntity.getUserId(),
                         dashBoardSolveEntity.getProblemNumber(),
                         dashBoardSolveEntity.getTryCount(),
-                        dashBoardSolveEntity.isIsSolve()));
+                        dashBoardSolveEntity.isSolve()));
             }
 
             List<DashBoardAttendEntity> dashBoardAttendEntityList = jdbcRepository.findDashBoardAttendEntityList(dashBoardId);
@@ -104,7 +105,7 @@ public class DashBoardService {
         return result;
     }
     public List<DashBoard> getDashBoardListByRecent() {
-        List<DashBoardEntity> dashBoardEntityList = jdbcRepository.findDashBoardEntityListByDesc(printCount);
+        List<DashBoardEntity> dashBoardEntityList = jdbcRepository.findDashBoardEntityListByRecent(printCount);
         return getDashBoardList(dashBoardEntityList);
     }
 
@@ -114,12 +115,22 @@ public class DashBoardService {
     }
 
     public List<Test> getTestListByRecent() {
-        List<TestEntity> testEntityList = jdbcRepository.findTestEntityListByDesc(printCount);
+        List<TestEntity> testEntityList = jdbcRepository.findTestEntityListByRecent(printCount);
         return getTestList(testEntityList);
     }
 
     public List<Test> getTestListByNext(int lastTestId) {
         List<TestEntity> testEntityList = jdbcRepository.findTestEntityListByNext(lastTestId, printCount);
         return getTestList(testEntityList);
+    }
+
+    public boolean CheckDashBoardId(int dashBoardId) {
+        try {
+            jdbcRepository.findDashBoardEntityById(dashBoardId);
+        }
+        catch (EmptyResultDataAccessException e) {
+            return false;
+        }
+        return true;
     }
 }

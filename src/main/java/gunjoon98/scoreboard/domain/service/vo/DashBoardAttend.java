@@ -1,4 +1,4 @@
-package gunjoon98.scoreboard.service.vo;
+package gunjoon98.scoreboard.domain.service.vo;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 @EqualsAndHashCode
-public class User {
+public class DashBoardAttend {
     private final String userId;
-    private final boolean isRemove;
 }

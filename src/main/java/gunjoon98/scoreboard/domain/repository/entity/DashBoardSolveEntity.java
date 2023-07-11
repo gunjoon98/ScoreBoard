@@ -11,6 +11,6 @@ public class DashBoardSolveEntity {
     private final String userId;
     private final int dashBoardId;
     private final int problemNumber;
-    private final boolean IsSolve;
+    private final boolean isSolve;
     private final int tryCount;
 }

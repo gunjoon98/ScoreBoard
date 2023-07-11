@@ -1,4 +1,4 @@
-package gunjoon98.scoreboard.service.vo;
+package gunjoon98.scoreboard.domain.service.vo;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 @EqualsAndHashCode
-public class TestSolve {
+public class TestAttend {
     private final String userId;
-    private final int problemNumber;
-    private final boolean isSolve;
-    private final int tryCount;
+    private final boolean isJoin;
 }

@@ -26,8 +26,9 @@ public class JdbcRepository {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public void saveUserEntity(String userId) {
+    public UserEntity saveUserEntity(String userId) {
         jdbcTemplate.update("insert into user(id, isRemove) values (?,?)", userId, false);
+        return new UserEntity(userId, false);
     }
 
     public void deleteUserEntity(String userId) {
@@ -40,7 +41,7 @@ public class JdbcRepository {
                 rs.getBoolean("isRemove")), userId);
     }
 
-    public int saveDashBoardEntity(DashBoardEntityForm dashBoardEntityForm) {
+    public DashBoardEntity saveDashBoardEntity(DashBoardEntityForm dashBoardEntityForm) {
         if(dashBoardEntityForm.getStartDate().isAfter(dashBoardEntityForm.getEndDate())) {
             throw new DataAccessException("startDate is behind endDate") { };
         }
@@ -55,7 +56,7 @@ public class JdbcRepository {
             return preparedStatement;
         }, generatedKeyHolder);
 
-        return generatedKeyHolder.getKey().intValue();
+        return new DashBoardEntity(generatedKeyHolder.getKey().intValue(), dashBoardEntityForm.getStartDate(), dashBoardEntityForm.getEndDate());
     }
 
     public void deleteDashBoardEntity(int dashBoardId) {
@@ -69,7 +70,7 @@ public class JdbcRepository {
                 rs.getTimestamp("endDate").toLocalDateTime()), dashBoardId);
     }
 
-    public List<DashBoardEntity> findDashBoardEntityListByDesc(int printCount) {
+    public List<DashBoardEntity> findDashBoardEntityListByRecent(int printCount) {
         return jdbcTemplate.query("select * from dashboard order by id desc limit ?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
@@ -146,7 +147,7 @@ public class JdbcRepository {
                 solve.getUserId(),
                 solve.getDashBoardId(),
                 solve.getProblemNumber(),
-                solve.isIsSolve(),
+                solve.isSolve(),
                 solve.getTryCount());
     }
 
@@ -177,29 +178,34 @@ public class JdbcRepository {
                 dashBoardAttendEntity.getUserId(), dashBoardAttendEntity.getDashBoardId());
     }
 
+    public DashBoardAttendEntity findDashBoardAttendEntityById(String userId, int dashBoardId) {
+        return jdbcTemplate.queryForObject("select * from dashboardattend where userId=? and dashBoardId=?", (ResultSet rs, int rowNum) -> new DashBoardAttendEntity(
+                rs.getString("userId"),
+                rs.getInt("dashBoardId")), userId, dashBoardId);
+    }
+
     public List<DashBoardAttendEntity> findDashBoardAttendEntityList(int dashBoardId) {
         return jdbcTemplate.query("select * from dashboardattend where dashBoardId=?", (ResultSet rs, int rowNum) -> new DashBoardAttendEntity(
                 rs.getString("userId"),
                 rs.getInt("dashBoardId")), dashBoardId);
     }
 
-    public int saveTestEntity(TestEntityForm testEntityForm) {
+    public TestEntity saveTestEntity(TestEntityForm testEntityForm) {
         if(testEntityForm.getStartDate().isAfter(testEntityForm.getEndDate())) {
             throw new DataAccessException("startDate is behind endDate") { };
         }
 
-        String sql = "insert into test(startDate, endDate, problemCount) values(?,?,?)";
+        String sql = "insert into test(startDate, endDate) values(?,?)";
         GeneratedKeyHolder generatedKeyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update((conn) -> {
             PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setTimestamp(1, Timestamp.valueOf(testEntityForm.getStartDate().withNano(0)));
-            preparedStatement.setTimestamp(2, Timestamp.valueOf(testEntityForm.getEndDate().withNano(0)));
-            preparedStatement.setInt(3, testEntityForm.getProblemCount());
+            preparedStatement.setTimestamp(1, Timestamp.valueOf(testEntityForm.getStartDate()));
+            preparedStatement.setTimestamp(2, Timestamp.valueOf(testEntityForm.getEndDate()));
             return preparedStatement;
         }, generatedKeyHolder);
 
-        return generatedKeyHolder.getKey().intValue();
+        return new TestEntity(generatedKeyHolder.getKey().intValue(), testEntityForm.getStartDate(), testEntityForm.getEndDate());
     }
 
     public void deleteTestEntity(int testId) {
@@ -210,24 +216,21 @@ public class JdbcRepository {
         return jdbcTemplate.queryForObject("select * from test where id=?", (ResultSet rs, int rowNum) -> new TestEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
-                rs.getTimestamp("endDate").toLocalDateTime(),
-                rs.getInt("problemCount")));
+                rs.getTimestamp("endDate").toLocalDateTime()), testId);
     }
 
-    public List<TestEntity> findTestEntityListByDesc(int printCount) {
+    public List<TestEntity> findTestEntityListByRecent(int printCount) {
         return jdbcTemplate.query("select * from test order by id desc limit ?", (ResultSet rs, int rowNum) -> new TestEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
-                rs.getTimestamp("endDate").toLocalDateTime(),
-                rs.getInt("problemCount")), printCount);
+                rs.getTimestamp("endDate").toLocalDateTime()), printCount);
     }
 
     public List<TestEntity> findTestEntityListByNext(int lastTestEntityId, int printCount) {
         return jdbcTemplate.query("select * from test where id < ? order by id desc limit ?", (ResultSet rs, int rowNum) -> new TestEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
-                rs.getTimestamp("endDate").toLocalDateTime(),
-                rs.getInt("problemCount")), lastTestEntityId, printCount);
+                rs.getTimestamp("endDate").toLocalDateTime()), lastTestEntityId, printCount);
     }
 
     public void saveTestProblemEntity(TestProblemEntity testProblemEntity) {
@@ -239,17 +242,17 @@ public class JdbcRepository {
                 testProblemEntity.getLink());
 
         for(String type : testProblemEntity.getTypes()) {
-            jdbcTemplate.update("insert into testProblemType(testId, problemNumber, problemType) values(?,?,?)",
+            jdbcTemplate.update("insert into testProblemType(testId, problemNumber, problemType) values(?, ?, ?)",
                     testProblemEntity.getTestId(),
                     testProblemEntity.getNumber(),
                     type);
         }
     }
 
-    public TestProblemEntity findTestProblemEntityById(int testId) {
-        String sql = "select * from testproblem where testId = ?";
+    public TestProblemEntity findTestProblemEntityById(int testId, int problemNumber) {
+        String sql = "select * from testproblem where testId = ? and number = ?";
         return jdbcTemplate.queryForObject(sql, (ResultSet rs, int rowNum) -> {
-            List<String> types = findTestProblemEntityTypeList(testId, rs.getInt("problemNumber"));
+            List<String> types = findTestProblemEntityTypeList(testId, problemNumber);
 
             return new TestProblemEntity(
                     rs.getInt("testId"),
@@ -259,7 +262,7 @@ public class JdbcRepository {
                     rs.getString("link"),
                     types
             );
-        }, testId);
+        }, testId, problemNumber);
     }
 
     public List<TestProblemEntity> findTestProblemEntityList(int testId) {

@@ -8,11 +8,9 @@ import java.time.LocalDateTime;
 public class TestEntityForm {
     private final LocalDateTime startDate;
     private final LocalDateTime endDate;
-    private final int problemCount;
 
-    public TestEntityForm(LocalDateTime startDate, LocalDateTime endDate, int problemCount) {
+    public TestEntityForm(LocalDateTime startDate, LocalDateTime endDate) {
         this.startDate = startDate.withNano(0);
         this.endDate = endDate.withNano(0);
-        this.problemCount = problemCount;
     }
 }

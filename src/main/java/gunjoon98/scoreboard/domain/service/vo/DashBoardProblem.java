@@ -1,4 +1,4 @@
-package gunjoon98.scoreboard.service.vo;
+package gunjoon98.scoreboard.domain.service.vo;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @RequiredArgsConstructor
 @EqualsAndHashCode
-public class TestProblem {
+public class DashBoardProblem {
     private final int number;
     private final String name;
     private final String level;

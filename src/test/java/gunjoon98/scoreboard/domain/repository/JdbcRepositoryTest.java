@@ -51,7 +51,7 @@ class JdbcRepositoryTest {
 
     @BeforeEach
     void DBInit() {
-        UserEntity userEntity = jdbcRepository.saveUserEntity("testUser");
+        UserEntity userEntity = jdbcRepository.saveUserEntity("testUser", "123456");
 
         List<String> types = new ArrayList<>();
         types.add("구현");
@@ -59,7 +59,7 @@ class JdbcRepositoryTest {
 
         DashBoardEntity dashBoardEntity = jdbcRepository.saveDashBoardEntity(new DashBoardEntityForm(LocalDateTime.now(), LocalDateTime.now().plusDays(1)));
 
-        DashBoardProblemEntity dashBoardProblemEntity1 = new DashBoardProblemEntity(dashBoardEntity.getId(), 1000, "A+B", "브론즈 V", "https://www.acmicpc.net/problem/1000", types);
+        DashBoardProblemEntity dashBoardProblemEntity1 = new DashBoardProblemEntity(dashBoardEntity.getId(), "baekjoon", "1000, "A+B", "브론즈 V", "https://www.acmicpc.net/problem/1000", types);
         jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity1);
         DashBoardProblemEntity dashBoardProblemEntity2 = new DashBoardProblemEntity(dashBoardEntity.getId(), 1001, "A-B", "브론즈 V", "https://www.acmicpc.net/problem/1001", types);
         jdbcRepository.saveDashBoardProblemEntity(dashBoardProblemEntity2);
@@ -129,6 +129,18 @@ class JdbcRepositoryTest {
 
         //then
         Assertions.assertThat(jdbcRepository.findUserEntityById(userId).isRemove()).isEqualTo(true);
+    }
+
+    @Test
+    @Transactional
+    void findActiveUserEntityListTest() {
+        //given
+
+        //when
+        List<UserEntity> result = jdbcRepository.findActiveUserEntityList();
+
+        //then
+        Assertions.assertThat(result.get(0)).isEqualTo(testData.userEntity);
     }
 
     @Test

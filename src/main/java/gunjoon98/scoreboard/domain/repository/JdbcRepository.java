@@ -26,19 +26,27 @@ public class JdbcRepository {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public UserEntity saveUserEntity(String userId) {
-        jdbcTemplate.update("insert into user(id, isRemove) values (?,?)", userId, false);
-        return new UserEntity(userId, false);
+    public UserEntity saveUserEntity(String userId, String passWord) {
+        jdbcTemplate.update("insert into user(id, passWord, isRemove) values (?, ?, ?)", userId, passWord, false);
+        return new UserEntity(userId, passWord,false);
     }
 
     public void deleteUserEntity(String userId) {
-        jdbcTemplate.update("update user set isRemove=? where id=?", true, userId);
+        jdbcTemplate.update("update user set isRemove = ? where id = ?", true, userId);
     }
 
-    public UserEntity findUserEntityById(String userId) {
+    public UserEntity findUserEntity(String userId) {
         return jdbcTemplate.queryForObject("select * from user where id=?", (ResultSet rs, int rowNum) -> new UserEntity(
                 rs.getString("id"),
+                rs.getString("passWord"),
                 rs.getBoolean("isRemove")), userId);
+    }
+
+    public List<UserEntity> findActiveUserEntityList() {
+        return jdbcTemplate.query("select * from user where isRemove = ?", (ResultSet rs, int rowNum) -> new UserEntity(
+                rs.getString("id"),
+                rs.getString("passWord"),
+                rs.getBoolean("isRemove")), false);
     }
 
     public DashBoardEntity saveDashBoardEntity(DashBoardEntityForm dashBoardEntityForm) {
@@ -63,65 +71,69 @@ public class JdbcRepository {
         jdbcTemplate.update("delete from dashboard where id=?", dashBoardId);
     }
 
-    public DashBoardEntity findDashBoardEntityById(int dashBoardId) {
+    public DashBoardEntity findDashBoardEntity(int dashBoardId) {
         return jdbcTemplate.queryForObject("select * from dashboard where id=?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
                 rs.getTimestamp("endDate").toLocalDateTime()), dashBoardId);
     }
 
-    public List<DashBoardEntity> findDashBoardEntityListByRecent(int printCount) {
+    public List<DashBoardEntity> findDashBoardEntityRecentList(int printCount) {
         return jdbcTemplate.query("select * from dashboard order by id desc limit ?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
                 rs.getTimestamp("endDate").toLocalDateTime()), printCount);
     }
 
-    public List<DashBoardEntity> findDashBoardEntityListByNext(int lastDashBoardEntityId, int printCount) {
+    public List<DashBoardEntity> findDashBoardEntityNextList(int lastDashBoardEntityId, int printCount) {
         return jdbcTemplate.query("select * from dashboard where id < ? order by id desc limit ?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
                 rs.getTimestamp("endDate").toLocalDateTime()), lastDashBoardEntityId, printCount);
-
     }
 
     public void saveDashBoardProblemEntity(DashBoardProblemEntity dashBoardProblemEntity) {
-        jdbcTemplate.update("insert into dashboardproblem(number, name, level, link, dashBoardId) values (?,?,?,?,?)",
+        jdbcTemplate.update("insert into dashboardproblem(dashBoardId, platForm, number, name, level, link) values (?, ?, ?, ?, ?, ?)",
+                dashBoardProblemEntity.getDashBoardId(),
+                dashBoardProblemEntity.getPlatForm(),
                 dashBoardProblemEntity.getNumber(),
                 dashBoardProblemEntity.getName(),
                 dashBoardProblemEntity.getLevel(),
-                dashBoardProblemEntity.getLink(),
-                dashBoardProblemEntity.getDashBoardId());
+                dashBoardProblemEntity.getLink());
+
+        if(dashBoardProblemEntity.getTypes() == null) return;
 
         for(String type : dashBoardProblemEntity.getTypes()) {
-            jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemNumber, problemType) values (?, ?, ?)",
-                    dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getNumber(), type);
+            jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemPlatForm, problemNumber, problemType) values (?, ?, ?, ?)",
+                    dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getPlatForm(), dashBoardProblemEntity.getNumber(), type);
         }
     }
 
-    public void deleteDashBoardProblemEntity(int dashBoardId, int problemNumber) {
-        jdbcTemplate.update("delete from dashboardproblem where dashBoardId=? and number=?", dashBoardId, problemNumber);
+    public void deleteDashBoardProblemEntity(int dashBoardId, String platForm, int number) {
+        jdbcTemplate.update("delete from dashboardproblem where dashBoardId=? and platForm=? and number=?", dashBoardId, platForm, number);
     }
 
-    public DashBoardProblemEntity findDashBoardProblemEntityById(int dashBoardId, int problemNumber) {
-        List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, problemNumber);
+    public DashBoardProblemEntity findDashBoardProblemEntity(int dashBoardId, String platForm, int number) {
+        List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, platForm, number);
 
-        return jdbcTemplate.queryForObject("select * from dashboardproblem where dashBoardId=? and number=?", (ResultSet rs, int rowNum)-> new DashBoardProblemEntity(
+        return jdbcTemplate.queryForObject("select * from dashboardproblem where dashBoardId=? and platForm=? and number=?", (ResultSet rs, int rowNum)-> new DashBoardProblemEntity(
                 rs.getInt("dashBoardId"),
+                rs.getString("platForm"),
                 rs.getInt("number"),
                 rs.getString("name"),
                 rs.getString("level"),
                 rs.getString("link"),
-                types), dashBoardId, problemNumber);
+                types), dashBoardId, platForm, number);
     }
 
     public List<DashBoardProblemEntity> findDashBoardProblemEntityList(int dashBoardId) {
         String sql = "select * from dashboardproblem where dashBoardId=?";
         return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) -> {
-            List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, rs.getInt("number"));
+            List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, rs.getString("platForm"), rs.getInt("number"));
 
             return new DashBoardProblemEntity(
                     rs.getInt("dashBoardId"),
+                    rs.getString("platForm"),
                     rs.getInt("number"),
                     rs.getString("name"),
                     rs.getString("level"),
@@ -130,10 +142,10 @@ public class JdbcRepository {
         }, dashBoardId);
     }
 
-    private List<String> findDashBoardProblemEntityTypeList(int dashBoardId, int problemNumber) {
-        String sql = "select problemType from dashboardproblemtype where dashBoardId=? and problemNumber=?";
+    private List<String> findDashBoardProblemEntityTypeList(int dashBoardId, String problemPlatForm, int problemNumber) {
+        String sql = "select problemType from dashboardproblemtype where dashBoardId=? and problemPlatForm=? and problemNumber=?";
         return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
-                rs.getString("problemType"), dashBoardId, problemNumber);
+                rs.getString("problemType"), dashBoardId, problemPlatForm, problemNumber);
     }
 
     private List<String> findTestProblemEntityTypeList(int testId, int problemNumber) {
@@ -143,38 +155,42 @@ public class JdbcRepository {
     }
 
     public void saveDashBoardSolveEntity(DashBoardSolveEntity solve) {
-        jdbcTemplate.update("insert into dashboardsolve(userId, dashBoardId, problemNumber, isSolve, tryCount) values(?,?,?,?,?)",
+        jdbcTemplate.update("insert into dashboardsolve(userId, dashBoardId, problemPlatForm, problemNumber, isSolve, tryCount) values(?, ?, ?, ?, ?, ?)",
                 solve.getUserId(),
                 solve.getDashBoardId(),
+                solve.getProblemPlatForm(),
                 solve.getProblemNumber(),
                 solve.isSolve(),
                 solve.getTryCount());
     }
 
-    public void deleteDashBoardSolveEntity(String userId, int dashBoardId, int problemNumber) {
-        jdbcTemplate.update("delete from dashboardsolve where userId=? and dashBoardId=? and problemNumber=?", userId, dashBoardId, problemNumber);
+    public void deleteDashBoardSolveEntity(String userId, int dashBoardId, String problemPlatForm, int problemNumber) {
+        jdbcTemplate.update("delete from dashboardsolve where userId=? and dashBoardId=? and problemPlatForm=? and problemNumber=?",
+                userId, dashBoardId, problemPlatForm, problemNumber);
     }
 
-    public DashBoardSolveEntity findDashBoardSolveEntityById(String userId, int dashBoardId, int problemNumber) {
-        return jdbcTemplate.queryForObject("select * from dashboardsolve where userId=? and dashBoardId=? and problemNumber=?", (ResultSet rs, int rowNum) -> new DashBoardSolveEntity(
+    public DashBoardSolveEntity findDashBoardSolveEntity(String userId, int dashBoardId, String problemPlatForm, int problemNumber) {
+        return jdbcTemplate.queryForObject("select * from dashboardsolve where userId=? and dashBoardId=? and problemPlatForm=? and problemNumber=?", (ResultSet rs, int rowNum) -> new DashBoardSolveEntity(
                 rs.getString("userId"),
                 rs.getInt("dashBoardId"),
+                rs.getString("problemPlatForm"),
                 rs.getInt("problemNumber"),
                 rs.getBoolean("isSolve"),
-                rs.getInt("tryCount")), userId, dashBoardId, problemNumber);
+                rs.getInt("tryCount")), userId, dashBoardId, problemPlatForm, problemNumber);
     }
 
     public List<DashBoardSolveEntity> findDashBoardSolveEntityList(int dashBoardId) {
         return jdbcTemplate.query("select * from dashboardsolve where dashBoardId=?", (ResultSet rs, int rowNum) -> new DashBoardSolveEntity(
                 rs.getString("userId"),
                 rs.getInt("dashBoardId"),
+                rs.getString("problemPlatForm"),
                 rs.getInt("problemNumber"),
                 rs.getBoolean("isSolve"),
                 rs.getInt("tryCount")), dashBoardId);
     }
 
     public void saveDashBoardAttendEntity(DashBoardAttendEntity dashBoardAttendEntity) {
-        jdbcTemplate.update("insert into dashboardattend(userId, dashBoardId) values (?,?)",
+        jdbcTemplate.update("insert into dashboardattend(userId, dashBoardId) values (?, ?)",
                 dashBoardAttendEntity.getUserId(), dashBoardAttendEntity.getDashBoardId());
     }
 

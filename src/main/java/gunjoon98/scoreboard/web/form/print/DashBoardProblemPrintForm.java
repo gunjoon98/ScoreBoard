@@ -1,6 +1,5 @@
-package gunjoon98.scoreboard.domain.service.vo;
+package gunjoon98.scoreboard.web.form.print;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -8,8 +7,7 @@ import java.util.List;
 
 @Getter
 @RequiredArgsConstructor
-@EqualsAndHashCode
-public class DashBoardProblem {
+public class DashBoardProblemPrintForm {
     private final int number;
     private final String name;
     private final String level;

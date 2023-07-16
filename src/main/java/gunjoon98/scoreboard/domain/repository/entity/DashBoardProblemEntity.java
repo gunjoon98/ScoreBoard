@@ -13,6 +13,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class DashBoardProblemEntity {
     private final int dashBoardId;
+    private final String platForm;
     private final int number;
     private final String name;
     private final String level;
@@ -24,7 +25,7 @@ public class DashBoardProblemEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DashBoardProblemEntity that = (DashBoardProblemEntity) o;
-        return dashBoardId == that.dashBoardId && number == that.number && Objects.equals(name, that.name)
+        return dashBoardId == that.dashBoardId && Objects.equals(platForm, that.platForm) && number == that.number && Objects.equals(name, that.name)
                 && Objects.equals(level, that.level) && Objects.equals(link, that.link) && listEquals(that.types);
     }
 
@@ -44,4 +45,6 @@ public class DashBoardProblemEntity {
         }
         return true;
     }
+
+    public static enum PlatFormName
 }

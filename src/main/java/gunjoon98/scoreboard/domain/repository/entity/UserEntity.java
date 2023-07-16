@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EqualsAndHashCode
 public class UserEntity {
-    private final String Id;
+    private final String id;
+    private final String passWord;
     private final boolean isRemove;
 }

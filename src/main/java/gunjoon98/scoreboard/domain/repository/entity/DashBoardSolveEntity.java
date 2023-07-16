@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class DashBoardSolveEntity {
     private final String userId;
     private final int dashBoardId;
+    private final String problemPlatForm;
     private final int problemNumber;
     private final boolean isSolve;
     private final int tryCount;

@@ -14,7 +14,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -95,7 +98,7 @@ public class JdbcRepository {
     public void saveDashBoardProblemEntity(DashBoardProblemEntity dashBoardProblemEntity) {
         jdbcTemplate.update("insert into dashboardproblem(dashBoardId, platForm, number, name, level, link) values (?, ?, ?, ?, ?, ?)",
                 dashBoardProblemEntity.getDashBoardId(),
-                dashBoardProblemEntity.getPlatForm(),
+                dashBoardProblemEntity.getPlatForm().getValue(),
                 dashBoardProblemEntity.getNumber(),
                 dashBoardProblemEntity.getName(),
                 dashBoardProblemEntity.getLevel(),
@@ -105,20 +108,20 @@ public class JdbcRepository {
 
         for(String type : dashBoardProblemEntity.getTypes()) {
             jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemPlatForm, problemNumber, problemType) values (?, ?, ?, ?)",
-                    dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getPlatForm(), dashBoardProblemEntity.getNumber(), type);
+                    dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getPlatForm().getValue(), dashBoardProblemEntity.getNumber(), type);
         }
     }
 
-    public void deleteDashBoardProblemEntity(int dashBoardId, String platForm, int number) {
-        jdbcTemplate.update("delete from dashboardproblem where dashBoardId=? and platForm=? and number=?", dashBoardId, platForm, number);
+    public void deleteDashBoardProblemEntity(int dashBoardId, PlatForm platForm, int number) {
+        jdbcTemplate.update("delete from dashboardproblem where dashBoardId=? and platForm=? and number=?", dashBoardId, platForm.getValue(), number);
     }
 
-    public DashBoardProblemEntity findDashBoardProblemEntity(int dashBoardId, String platForm, int number) {
-        List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, platForm, number);
+    public DashBoardProblemEntity findDashBoardProblemEntity(int dashBoardId, PlatForm platForm, int number) {
+        Set<String> types = findDashBoardProblemEntityTypeList(dashBoardId, platForm, number);
 
-        return jdbcTemplate.queryForObject("select * from dashboardproblem where dashBoardId=? and platForm=? and number=?", (ResultSet rs, int rowNum)-> new DashBoardProblemEntity(
+        return jdbcTemplate.queryForObject("select * from dashboardproblem where dashBoardId=? and platForm=? and number=?", (ResultSet rs, int rowNum) -> new DashBoardProblemEntity(
                 rs.getInt("dashBoardId"),
-                rs.getString("platForm"),
+                PlatForm.valueOf(rs.getInt("platForm")),
                 rs.getInt("number"),
                 rs.getString("name"),
                 rs.getString("level"),
@@ -129,7 +132,7 @@ public class JdbcRepository {
     public List<DashBoardProblemEntity> findDashBoardProblemEntityList(int dashBoardId) {
         String sql = "select * from dashboardproblem where dashBoardId=?";
         return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) -> {
-            List<String> types = findDashBoardProblemEntityTypeList(dashBoardId, rs.getString("platForm"), rs.getInt("number"));
+            Set<String> types = findDashBoardProblemEntityTypeList(dashBoardId, PlatForm.valueOf(rs.getInt("platForm")), rs.getInt("number"));
 
             return new DashBoardProblemEntity(
                     rs.getInt("dashBoardId"),
@@ -142,10 +145,10 @@ public class JdbcRepository {
         }, dashBoardId);
     }
 
-    private List<String> findDashBoardProblemEntityTypeList(int dashBoardId, String problemPlatForm, int problemNumber) {
+    private Set<String> findDashBoardProblemEntityTypeList(int dashBoardId, PlatForm problemPlatForm, int problemNumber) {
         String sql = "select problemType from dashboardproblemtype where dashBoardId=? and problemPlatForm=? and problemNumber=?";
-        return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
-                rs.getString("problemType"), dashBoardId, problemPlatForm, problemNumber);
+        return new HashSet<>(jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
+                rs.getString("problemType"), dashBoardId, problemPlatForm, problemNumber));
     }
 
     private List<String> findTestProblemEntityTypeList(int testId, int problemNumber) {

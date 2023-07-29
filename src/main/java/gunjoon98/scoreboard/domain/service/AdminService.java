@@ -15,7 +15,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminService {
     private final JdbcRepository jdbcRepository;
-
     @Transactional
     public void createDashBoard(DashBoardSaveForm dashBoardSaveForm) {
         DashBoardEntityForm dashBoardEntityForm = new DashBoardEntityForm(
@@ -37,6 +36,7 @@ public class AdminService {
     public void createAlgorithmProblem(DashBoardProblemSaveForm problemSaveForm) {
         DashBoardProblemEntity problemEntity = new DashBoardProblemEntity(
                 problemSaveForm.getDashBoardId(),
+                problemSaveForm.getPlatForm(),
                 problemSaveForm.getNumber(),
                 problemSaveForm.getName(),
                 problemSaveForm.getLevel(),
@@ -48,19 +48,15 @@ public class AdminService {
             jdbcRepository.saveDashBoardSolveEntity(new DashBoardSolveEntity(
                     attendEntity.getUserId(),
                     attendEntity.getDashBoardId(),
+                    problemEntity.getPlatForm(),
                     problemEntity.getNumber(),
                     false,
                     0));
         }
     }
 
-
-
-
-
-
-
-
-
-
+    @Transactional
+    public void deleteAlgorithmProblem(int dashBoardId, PlatForm PlatForm, int problemNumber) {
+        jdbcRepository.deleteDashBoardProblemEntity(dashBoardId, PlatForm, problemNumber);
+    }
 }

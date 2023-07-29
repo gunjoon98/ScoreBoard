@@ -17,7 +17,6 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -38,7 +37,7 @@ public class JdbcRepository {
         jdbcTemplate.update("update user set isRemove = ? where id = ?", true, userId);
     }
 
-    public UserEntity findUserEntity(String userId) {
+    public UserEntity findUserEntityById(String userId) {
         return jdbcTemplate.queryForObject("select * from user where id=?", (ResultSet rs, int rowNum) -> new UserEntity(
                 rs.getString("id"),
                 rs.getString("passWord"),
@@ -74,7 +73,7 @@ public class JdbcRepository {
         jdbcTemplate.update("delete from dashboard where id=?", dashBoardId);
     }
 
-    public DashBoardEntity findDashBoardEntity(int dashBoardId) {
+    public DashBoardEntity findDashBoardEntityById(int dashBoardId) {
         return jdbcTemplate.queryForObject("select * from dashboard where id=?", (ResultSet rs, int rowNum) -> new DashBoardEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
@@ -104,8 +103,6 @@ public class JdbcRepository {
                 dashBoardProblemEntity.getLevel(),
                 dashBoardProblemEntity.getLink());
 
-        if(dashBoardProblemEntity.getTypes() == null) return;
-
         for(String type : dashBoardProblemEntity.getTypes()) {
             jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemPlatForm, problemNumber, problemType) values (?, ?, ?, ?)",
                     dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getPlatForm().getValue(), dashBoardProblemEntity.getNumber(), type);
@@ -116,7 +113,7 @@ public class JdbcRepository {
         jdbcTemplate.update("delete from dashboardproblem where dashBoardId=? and platForm=? and number=?", dashBoardId, platForm.getValue(), number);
     }
 
-    public DashBoardProblemEntity findDashBoardProblemEntity(int dashBoardId, PlatForm platForm, int number) {
+    public DashBoardProblemEntity findDashBoardProblemEntityById(int dashBoardId, PlatForm platForm, int number) {
         Set<String> types = findDashBoardProblemEntityTypeList(dashBoardId, platForm, number);
 
         return jdbcTemplate.queryForObject("select * from dashboardproblem where dashBoardId=? and platForm=? and number=?", (ResultSet rs, int rowNum) -> new DashBoardProblemEntity(
@@ -126,7 +123,7 @@ public class JdbcRepository {
                 rs.getString("name"),
                 rs.getString("level"),
                 rs.getString("link"),
-                types), dashBoardId, platForm, number);
+                types), dashBoardId, platForm.getValue(), number);
     }
 
     public List<DashBoardProblemEntity> findDashBoardProblemEntityList(int dashBoardId) {
@@ -136,7 +133,7 @@ public class JdbcRepository {
 
             return new DashBoardProblemEntity(
                     rs.getInt("dashBoardId"),
-                    rs.getString("platForm"),
+                    PlatForm.valueOf(rs.getInt("platForm")),
                     rs.getInt("number"),
                     rs.getString("name"),
                     rs.getString("level"),
@@ -148,45 +145,45 @@ public class JdbcRepository {
     private Set<String> findDashBoardProblemEntityTypeList(int dashBoardId, PlatForm problemPlatForm, int problemNumber) {
         String sql = "select problemType from dashboardproblemtype where dashBoardId=? and problemPlatForm=? and problemNumber=?";
         return new HashSet<>(jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
-                rs.getString("problemType"), dashBoardId, problemPlatForm, problemNumber));
+                rs.getString("problemType"), dashBoardId, problemPlatForm.getValue(), problemNumber));
     }
 
-    private List<String> findTestProblemEntityTypeList(int testId, int problemNumber) {
+    private Set<String> findTestProblemEntityTypeList(int testId, int problemNumber) {
         String sql = "select problemType from testproblemtype where testId=? and problemNumber=?";
-        return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
-                rs.getString("problemType"), testId, problemNumber);
+        return new HashSet<>(jdbcTemplate.query(sql, (ResultSet rs, int rowNum) ->
+                rs.getString("problemType"), testId, problemNumber));
     }
 
     public void saveDashBoardSolveEntity(DashBoardSolveEntity solve) {
         jdbcTemplate.update("insert into dashboardsolve(userId, dashBoardId, problemPlatForm, problemNumber, isSolve, tryCount) values(?, ?, ?, ?, ?, ?)",
                 solve.getUserId(),
                 solve.getDashBoardId(),
-                solve.getProblemPlatForm(),
+                solve.getProblemPlatForm().getValue(),
                 solve.getProblemNumber(),
                 solve.isSolve(),
                 solve.getTryCount());
     }
 
-    public void deleteDashBoardSolveEntity(String userId, int dashBoardId, String problemPlatForm, int problemNumber) {
+    public void deleteDashBoardSolveEntity(String userId, int dashBoardId, PlatForm problemPlatForm, int problemNumber) {
         jdbcTemplate.update("delete from dashboardsolve where userId=? and dashBoardId=? and problemPlatForm=? and problemNumber=?",
-                userId, dashBoardId, problemPlatForm, problemNumber);
+                userId, dashBoardId, problemPlatForm.getValue(), problemNumber);
     }
 
-    public DashBoardSolveEntity findDashBoardSolveEntity(String userId, int dashBoardId, String problemPlatForm, int problemNumber) {
+    public DashBoardSolveEntity findDashBoardSolveEntityById(String userId, int dashBoardId, PlatForm problemPlatForm, int problemNumber) {
         return jdbcTemplate.queryForObject("select * from dashboardsolve where userId=? and dashBoardId=? and problemPlatForm=? and problemNumber=?", (ResultSet rs, int rowNum) -> new DashBoardSolveEntity(
                 rs.getString("userId"),
                 rs.getInt("dashBoardId"),
-                rs.getString("problemPlatForm"),
+                PlatForm.valueOf(rs.getInt("problemPlatForm")),
                 rs.getInt("problemNumber"),
                 rs.getBoolean("isSolve"),
-                rs.getInt("tryCount")), userId, dashBoardId, problemPlatForm, problemNumber);
+                rs.getInt("tryCount")), userId, dashBoardId, problemPlatForm.getValue(), problemNumber);
     }
 
     public List<DashBoardSolveEntity> findDashBoardSolveEntityList(int dashBoardId) {
         return jdbcTemplate.query("select * from dashboardsolve where dashBoardId=?", (ResultSet rs, int rowNum) -> new DashBoardSolveEntity(
                 rs.getString("userId"),
                 rs.getInt("dashBoardId"),
-                rs.getString("problemPlatForm"),
+                PlatForm.valueOf(rs.getInt("problemPlatForm")),
                 rs.getInt("problemNumber"),
                 rs.getBoolean("isSolve"),
                 rs.getInt("tryCount")), dashBoardId);
@@ -238,14 +235,14 @@ public class JdbcRepository {
                 rs.getTimestamp("endDate").toLocalDateTime()), testId);
     }
 
-    public List<TestEntity> findTestEntityListByRecent(int printCount) {
+    public List<TestEntity> findTestEntityyRecentList(int printCount) {
         return jdbcTemplate.query("select * from test order by id desc limit ?", (ResultSet rs, int rowNum) -> new TestEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
                 rs.getTimestamp("endDate").toLocalDateTime()), printCount);
     }
 
-    public List<TestEntity> findTestEntityListByNext(int lastTestEntityId, int printCount) {
+    public List<TestEntity> findTestEntityNextList(int lastTestEntityId, int printCount) {
         return jdbcTemplate.query("select * from test where id < ? order by id desc limit ?", (ResultSet rs, int rowNum) -> new TestEntity(
                 rs.getInt("id"),
                 rs.getTimestamp("startDate").toLocalDateTime(),
@@ -271,7 +268,7 @@ public class JdbcRepository {
     public TestProblemEntity findTestProblemEntityById(int testId, int problemNumber) {
         String sql = "select * from testproblem where testId = ? and number = ?";
         return jdbcTemplate.queryForObject(sql, (ResultSet rs, int rowNum) -> {
-            List<String> types = findTestProblemEntityTypeList(testId, problemNumber);
+            Set<String> types = findTestProblemEntityTypeList(testId, problemNumber);
 
             return new TestProblemEntity(
                     rs.getInt("testId"),
@@ -287,7 +284,7 @@ public class JdbcRepository {
     public List<TestProblemEntity> findTestProblemEntityList(int testId) {
         String sql = "select * from testproblem where testId = ?";
         return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) -> {
-            List<String> types = findTestProblemEntityTypeList(testId, rs.getInt("problemNumber"));
+                Set<String> types = findTestProblemEntityTypeList(testId, rs.getInt("problemNumber"));
 
             return new TestProblemEntity(
                     rs.getInt("testId"),

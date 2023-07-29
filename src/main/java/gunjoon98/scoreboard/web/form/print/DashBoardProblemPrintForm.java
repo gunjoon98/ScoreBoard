@@ -1,16 +1,15 @@
-package gunjoon98.scoreboard.domain.repository.entity;
+package gunjoon98.scoreboard.web.form.print;
 
-import lombok.EqualsAndHashCode;
+import gunjoon98.scoreboard.domain.repository.entity.PlatForm;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.*;
+import java.util.Set;
 
 @Getter
 @RequiredArgsConstructor
-@EqualsAndHashCode
-public class TestProblemEntity {
-    private final int testId;
+public class DashBoardProblemPrintForm {
+    private final PlatForm platForm;
     private final int number;
     private final String name;
     private final String level;

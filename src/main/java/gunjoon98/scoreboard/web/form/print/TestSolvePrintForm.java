@@ -1,13 +1,11 @@
-package gunjoon98.scoreboard.domain.service.vo;
+package gunjoon98.scoreboard.web.form.print;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-@EqualsAndHashCode
-public class TestSolve {
+public class TestSolvePrintForm {
     private final String userId;
     private final int problemNumber;
     private final boolean isSolve;

@@ -1,6 +1,5 @@
-package gunjoon98.scoreboard.domain.service.vo;
+package gunjoon98.scoreboard.web.form;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -8,11 +7,13 @@ import java.util.List;
 
 @Getter
 @RequiredArgsConstructor
-@EqualsAndHashCode
-public class DashBoardProblem {
+public class AlgorithmProblemForm {
+    private final int dashBoardId;
     private final int number;
     private final String name;
     private final String level;
     private final String link;
     private final List<String> types;
+
+
 }

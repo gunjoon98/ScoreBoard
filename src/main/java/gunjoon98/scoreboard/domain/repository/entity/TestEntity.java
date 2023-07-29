@@ -14,6 +14,7 @@ public class TestEntity {
     private final LocalDateTime endDate;
 
     public TestEntity(int id, LocalDateTime startDate, LocalDateTime endDate) {
+        //localDatetime of java present until nanosecond, datetime of mysql present until microsecond
         this.id = id;
         this.startDate = startDate.withNano(0);
         this.endDate = endDate.withNano(0);

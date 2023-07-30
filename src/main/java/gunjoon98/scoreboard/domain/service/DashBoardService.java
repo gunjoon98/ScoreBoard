@@ -125,4 +125,21 @@ public class DashBoardService {
         List<TestEntity> testEntityList = jdbcRepository.findTestEntityNextList(lastTestId, printCount);
         return getTestList(testEntityList);
     }
+    public boolean ExistDashBoard(int dashBoardId) {
+        try {
+            jdbcRepository.findDashBoardEntityById(dashBoardId);
+        } catch(EmptyResultDataAccessException e) {
+            return false;
+        }
+        return true;
+    }
+    
+    public boolean ExistTest(int testId) {
+        try {
+            jdbcRepository.findTestEntityById(testId);
+        } catch(EmptyResultDataAccessException e) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -30,7 +30,7 @@ public class JdbcRepository {
 
     public UserEntity saveUserEntity(String userId, String passWord) {
         jdbcTemplate.update("insert into user(id, passWord, isRemove) values (?, ?, ?)", userId, passWord, false);
-        return new UserEntity(userId, passWord,false);
+        return new UserEntity(userId, passWord, false);
     }
 
     public void deleteUserEntity(String userId) {
@@ -52,8 +52,9 @@ public class JdbcRepository {
     }
 
     public DashBoardEntity saveDashBoardEntity(DashBoardEntityForm dashBoardEntityForm) {
-        if(dashBoardEntityForm.getStartDate().isAfter(dashBoardEntityForm.getEndDate())) {
-            throw new DataAccessException("startDate is behind endDate") { };
+        if (dashBoardEntityForm.getStartDate().isAfter(dashBoardEntityForm.getEndDate())) {
+            throw new DataAccessException("startDate is behind endDate") {
+            };
         }
 
         String sql = "insert into dashboard(startDate, endDate) values (?,?)";
@@ -103,7 +104,7 @@ public class JdbcRepository {
                 dashBoardProblemEntity.getLevel(),
                 dashBoardProblemEntity.getLink());
 
-        for(String type : dashBoardProblemEntity.getTypes()) {
+        for (String type : dashBoardProblemEntity.getTypes()) {
             jdbcTemplate.update("insert into dashboardproblemtype(dashboardId, problemPlatForm, problemNumber, problemType) values (?, ?, ?, ?)",
                     dashBoardProblemEntity.getDashBoardId(), dashBoardProblemEntity.getPlatForm().getValue(), dashBoardProblemEntity.getNumber(), type);
         }
@@ -207,8 +208,9 @@ public class JdbcRepository {
     }
 
     public TestEntity saveTestEntity(TestEntityForm testEntityForm) {
-        if(testEntityForm.getStartDate().isAfter(testEntityForm.getEndDate())) {
-            throw new DataAccessException("startDate is behind endDate") { };
+        if (testEntityForm.getStartDate().isAfter(testEntityForm.getEndDate())) {
+            throw new DataAccessException("startDate is behind endDate") {
+            };
         }
 
         String sql = "insert into test(startDate, endDate) values(?,?)";
@@ -257,7 +259,7 @@ public class JdbcRepository {
                 testProblemEntity.getLevel(),
                 testProblemEntity.getLink());
 
-        for(String type : testProblemEntity.getTypes()) {
+        for (String type : testProblemEntity.getTypes()) {
             jdbcTemplate.update("insert into testProblemType(testId, problemNumber, problemType) values(?, ?, ?)",
                     testProblemEntity.getTestId(),
                     testProblemEntity.getNumber(),
@@ -284,7 +286,7 @@ public class JdbcRepository {
     public List<TestProblemEntity> findTestProblemEntityList(int testId) {
         String sql = "select * from testproblem where testId = ?";
         return jdbcTemplate.query(sql, (ResultSet rs, int rowNum) -> {
-                Set<String> types = findTestProblemEntityTypeList(testId, rs.getInt("problemNumber"));
+            Set<String> types = findTestProblemEntityTypeList(testId, rs.getInt("problemNumber"));
 
             return new TestProblemEntity(
                     rs.getInt("testId"),
